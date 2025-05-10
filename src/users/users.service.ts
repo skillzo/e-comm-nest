@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from './entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
+  ) {}
+
+  // healper functions
+  async findByEmail(email: string) {
+    return await this.usersRepository.findOneBy({ email });
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findById(id: string) {
+    return await this.usersRepository.findOneBy({ id });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  // auth
+  async signup(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const existingUser = await this.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new BadRequestException('User already exists');
+    }
+
+    const user = this.usersRepository.create(createUserDto);
+    return await this.usersRepository.save(user);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findAll() {
+    const users = await this.usersRepository.find();
+    return users;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findOne(id: string) {
+    const user = await this.findById(id);
+    return user;
+  }
+
+  update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      return this.usersRepository.update(id, updateUserDto);
+    } catch (err) {
+      throw new BadRequestException();
+    }
+  }
+
+  remove(id: string) {
+    try {
+      return this.usersRepository.delete(id);
+    } catch (err) {
+      throw new BadRequestException();
+    }
   }
 }
