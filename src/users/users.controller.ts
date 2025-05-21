@@ -7,25 +7,19 @@ import {
   Param,
   Delete,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
+import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('signup')
-  async signup(@Body() body: CreateUserDto): Promise<UserEntity> {
-    try {
-      return this.usersService.signup(body);
-    } catch (err) {
-      throw new BadRequestException(err.message);
-    }
-  }
-
+  @UseGuards(JwtAuthGuard)
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {
@@ -44,7 +38,7 @@ export class UsersController {
     }
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
       return this.usersService.update(id, updateUserDto);
@@ -53,8 +47,14 @@ export class UsersController {
     }
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  //
+  @Get('getProfile')
+  async getProfile(@CurrentUser() currentUser: UserEntity) {
+    return currentUser;
   }
 }
