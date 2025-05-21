@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   forwardRef,
   Inject,
@@ -20,17 +21,22 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
+    if (!user) throw new BadRequestException('invalid email or password');
+    const userPassword = await this.usersService.findUserWithPassword(user.id);
+    const passwordMatch =
+      userPassword && (await bcrypt.compare(password, userPassword.password));
+
+    if (!passwordMatch) {
+      throw new BadRequestException('invalid email or password');
     }
-    return null;
+
+    const { password: pass, ...result } = user;
+    return result;
   }
 
   async login(user: UserEntity) {
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
-    console.log('token', accessToken);
     return {
       access_token: accessToken,
       user_id: user.id,
@@ -39,15 +45,11 @@ export class AuthService {
 
   async signup(createUserDto: CreateUserDto): Promise<UserEntity> {
     createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
-
-    console.log('password', createUserDto.password);
     const user = this.usersService.create(createUserDto);
     return user;
   }
 
   // reset password
-
-  // update password
 
   // forgot password
 

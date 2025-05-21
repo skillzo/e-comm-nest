@@ -53,8 +53,12 @@ export class UsersController {
   }
 
   //
-  @Get('getProfile')
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() currentUser: UserEntity) {
     return currentUser;
   }
+
+  @Post('updateProfile')
+  async updateProfile(@CurrentUser() currentUser: UserEntity) {}
 }

@@ -49,9 +49,9 @@ export class UsersService {
     return user;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     try {
-      return this.usersRepository.update(id, updateUserDto);
+      return await this.usersRepository.update(id, updateUserDto);
     } catch (err) {
       throw new BadRequestException();
     }
@@ -63,5 +63,13 @@ export class UsersService {
     } catch (err) {
       throw new BadRequestException();
     }
+  }
+
+  async findUserWithPassword(id: string): Promise<UserEntity | null> {
+    return await this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.id = :id', { id })
+      .getOne();
   }
 }

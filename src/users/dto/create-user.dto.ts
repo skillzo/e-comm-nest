@@ -10,7 +10,7 @@ export class CreateUserDto {
   @IsEmail(
     {
       domain_specific_validation: true,
-      host_whitelist: ['gmail.com', 'yahoo.com'],
+      host_whitelist: ['gmail.com', 'yahoo.com', 'yopmail.com'],
     },
     { message: 'Email must be a valid email' },
   )

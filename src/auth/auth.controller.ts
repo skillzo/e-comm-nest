@@ -1,11 +1,7 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -21,27 +17,14 @@ export class AuthController {
   async signup(
     @Body() body: CreateUserDto,
   ): Promise<Omit<UserEntity, 'password'>> {
-    try {
-      const user = await this.authService.signup(body);
-      const { password, ...res } = user;
-      return res;
-    } catch (err) {
-      throw new InternalServerErrorException(err.message);
-    }
+    const user = await this.authService.signup(body);
+    const { password, ...res } = user;
+    return res;
   }
 
   @Post('login')
   async login(@Body() body: SigninDto) {
-    try {
-      const user = await this.authService.validateUser(
-        body.email,
-        body.password,
-      );
-      console.log(user);
-      return;
-      // return this.authService.login(user);
-    } catch (err) {
-      throw new InternalServerErrorException(err.message);
-    }
+    const user = await this.authService.validateUser(body.email, body.password);
+    return await this.authService.login(user);
   }
 }
