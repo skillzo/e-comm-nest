@@ -14,12 +14,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { AuthRoles } from 'src/utility/decorators/roles.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
+  // @AuthRoles('user')
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {
@@ -53,6 +55,7 @@ export class UsersController {
   }
 
   //
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() currentUser: UserEntity) {

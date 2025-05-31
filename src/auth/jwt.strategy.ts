@@ -12,16 +12,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       secretOrKey:
         configService.get<string>('JWT_SECRET') ||
         (() => {
-          console.log(
-            'JWT_SECRET not defined',
-            configService.get<string>('JWT_SECRET'),
-          );
           throw new Error('JWT_SECRET not defined');
         })(),
     });
   }
 
   async validate(payload: any) {
-    return { id: payload.sub, email: payload.email, roles: payload.roles };
+    return { id: payload.sub, email: payload.email, roles: payload.role };
   }
 }

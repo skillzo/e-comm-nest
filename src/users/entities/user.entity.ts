@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
@@ -23,11 +24,26 @@ export class UserEntity {
   @Column({ select: false })
   password: string;
 
-  @Column({ type: 'enum', enum: Roles, default: [Roles.USER] })
+  @Column({ type: 'enum', enum: Roles, array: true, default: [Roles.USER] })
   role: Roles[];
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
+
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updated_at: Date;
+
+  @Column({ default: true })
+  is_active: boolean;
 }
+
+// {
+//   id: string;
+//   name: string;
+//   email: string;
+//   password: string;
+//   role: Roles[];
+//   created_at: Date;
+//   updated_at: Date;
+//   is_active: boolean;
+// }
