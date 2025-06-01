@@ -1,5 +1,8 @@
-import { Roles } from 'src/utility/common/user-roles.enum';
+import { AddressEntity } from 'src/address/entities/address.entity';
+import { OrderEntity } from 'src/orders/entities/order.entity';
+import { Roles, UserStatus } from 'src/utility/enums/user.enum';
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -13,7 +16,7 @@ import {
 @Unique(['email'])
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  user_id: string;
 
   @Column()
   name: string;
@@ -27,14 +30,23 @@ export class UserEntity {
   @Column({ type: 'enum', enum: Roles, array: true, default: [Roles.USER] })
   role: Roles[];
 
+  @Column({ default: true })
+  is_active: boolean;
+
+  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING })
+  status: UserStatus;
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updated_at: Date;
 
-  @Column({ default: true })
-  is_active: boolean;
+  @OneToMany(() => OrderEntity, (o) => o.order_id)
+  orders: OrderEntity[];
+
+  @OneToMany(() => AddressEntity, (a) => a.address_id)
+  addresses: AddressEntity[];
 }
 
 // {
@@ -46,4 +58,6 @@ export class UserEntity {
 //   created_at: Date;
 //   updated_at: Date;
 //   is_active: boolean;
+//   orders: OrderEntity[]
+//   address: AddressEntity[]
 // }

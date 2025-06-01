@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import { UserStatus } from 'src/utility/enums/user.enum';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +24,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return await this.usersRepository.findOneBy({ id });
+    return await this.usersRepository.findOneBy({ user_id: id });
   }
 
   // auth
@@ -57,9 +58,9 @@ export class UsersService {
     }
   }
 
-  remove(id: string) {
+  async softDelete(id: string) {
     try {
-      return this.usersRepository.delete(id);
+      return this.usersRepository.update(id, { is_active: false });
     } catch (err) {
       throw new BadRequestException();
     }
@@ -69,7 +70,22 @@ export class UsersService {
     return await this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
-      .where('user.id = :id', { id })
+      .where('user.user_id = :id', { id })
       .getOne();
+  }
+
+  async changePassword(id: string, password: string) {
+    return await this.usersRepository.update(id, { password });
+  }
+
+  async toggleStatus(id: string, status: UserStatus) {
+    let active: boolean;
+    if (status === UserStatus.SUSPENDED || status === UserStatus.INACTIVE) {
+      active = false;
+    } else {
+      active = true;
+    }
+
+    return await this.usersRepository.update(id, { is_active: active, status });
   }
 }

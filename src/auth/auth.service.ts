@@ -22,7 +22,9 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new BadRequestException('invalid email or password');
-    const userPassword = await this.usersService.findUserWithPassword(user.id);
+    const userPassword = await this.usersService.findUserWithPassword(
+      user.user_id,
+    );
     const passwordMatch =
       userPassword && (await bcrypt.compare(password, userPassword.password));
 
@@ -35,11 +37,12 @@ export class AuthService {
   }
 
   async login(user: UserEntity) {
-    const payload = { email: user.email, sub: user.id };
+    const payload = { email: user.email, sub: user.user_id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
     return {
       access_token: accessToken,
-      user_id: user.id,
+      user_id: user.user_id,
+      role: user.role,
     };
   }
 

@@ -15,13 +15,16 @@ import { UserEntity } from './entities/user.entity';
 import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AuthRoles } from 'src/utility/decorators/roles.decorator';
+import { Roles, UserStatus } from 'src/utility/enums/user.enum';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // get all users
   @UseGuards(JwtAuthGuard)
-  // @AuthRoles('user')
+  // @AuthRoles(Roles.ADMIN)
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {
@@ -31,6 +34,8 @@ export class UsersController {
     }
   }
 
+  //  get user by id
+  @AuthRoles(Roles.ADMIN)
   @Get('getById/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -40,6 +45,7 @@ export class UsersController {
     }
   }
 
+  // update user details
   @Patch('update/:id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     try {
@@ -49,19 +55,34 @@ export class UsersController {
     }
   }
 
+  // soft delete user
+  @AuthRoles(Roles.ADMIN)
   @Delete('delete/:id')
   remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+    return this.usersService.softDelete(id);
   }
 
-  //
-
+  // get user profile
   @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getProfile(@CurrentUser() currentUser: UserEntity) {
+  getProfile(@CurrentUser() currentUser: UserEntity) {
     return currentUser;
   }
 
-  @Post('updateProfile')
-  async updateProfile(@CurrentUser() currentUser: UserEntity) {}
+  // get users addresses
+  @Get('addresses')
+  async getAddresses(@CurrentUser() currentUser: UserEntity) {
+    return currentUser.addresses;
+  }
+
+  // update user password
+  @Patch('updatePassword/:id')
+  updatePassword(@Param('id') id: string, @Body() password: string) {
+    return this.usersService.changePassword(id, password);
+  }
+
+  // toggle user status
+  @Patch('toggleStatus/:id')
+  toggleStatus(@Param('id') id: string, @Body() status: UserStatus) {
+    return this.usersService.toggleStatus(id, status);
+  }
 }
