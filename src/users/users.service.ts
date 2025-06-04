@@ -9,7 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { UserStatus } from 'src/utility/enums/user.enum';
+import { Roles, UserStatus } from 'src/utility/enums/user.enum';
 
 @Injectable()
 export class UsersService {
@@ -87,5 +87,25 @@ export class UsersService {
     }
 
     return await this.usersRepository.update(id, { is_active: active, status });
+  }
+
+  async makeAdmin(id: string) {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException();
+    }
+    if (user.role.includes(Roles.ADMIN)) {
+      throw new BadRequestException('user is already admin');
+    }
+
+    console.log('user', user.role);
+    const newRole = [...user.role, Roles.ADMIN];
+    // await this.usersRepository.update(id, { role: newRole });
+
+    return {
+      role: newRole,
+      user_id: id,
+      message: 'User is now an admin',
+    };
   }
 }

@@ -85,4 +85,10 @@ export class UsersController {
   toggleStatus(@Param('id') id: string, @Body() status: UserStatus) {
     return this.usersService.toggleStatus(id, status);
   }
+
+  @AuthRoles(Roles.ADMIN)
+  @Patch('makeAdmin/:id')
+  makeAdmin(@Param('id') id: string) {
+    return this.usersService.makeAdmin(id);
+  }
 }
