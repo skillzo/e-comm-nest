@@ -3,6 +3,7 @@ import { ProductImageEntity } from 'src/product-images/entities/product-image.en
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -29,7 +30,7 @@ export class ProductEntity {
   stock_quantity: number;
 
   @Column({ default: true })
-  is_active: string;
+  is_active: boolean;
 
   @Column()
   image_url: string;
@@ -46,4 +47,7 @@ export class ProductEntity {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at?: Date;
 }
