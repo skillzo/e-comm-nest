@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { IAPIResponse } from 'interfaces/api-response.interface';
@@ -18,6 +18,7 @@ export class ProductsService {
   ) {}
 
   //  public
+
   // GET /products — Get all active products (with pagination, filtering, sorting)
   async findAll(
     page = 1,
@@ -79,14 +80,26 @@ export class ProductsService {
   async findOne(id: string): Promise<ProductEntity> {
     const product = await this.productRepository.findOne({
       where: { product_id: id, deleted_at: IsNull() },
-      relations: ['category'],
+      relations: ['category', 'images'],
       select: {
         name: true,
         product_id: true,
+
+        description: true,
+        price: true,
+        stock_quantity: true,
+        is_active: true,
+        image_url: true,
+        images: {
+          id: true,
+          image_url: true,
+        },
         category: {
           category_id: true,
           name: true,
         },
+        updated_at: true,
+        created_at: true,
       },
     });
 
@@ -100,11 +113,19 @@ export class ProductsService {
   // GET /products/category/:categoryId — Get products by category
   async findByCategory(categoryId: string): Promise<ProductEntity[]> {
     const products = await this.productRepository.find({
-      where: { category: { category_id: categoryId }, deleted_at: IsNull() },
+      where: {
+        category: { category_id: categoryId },
+        deleted_at: IsNull(),
+        is_active: true,
+      },
       relations: ['category'],
       select: {
         name: true,
         product_id: true,
+        description: true,
+        image_url: true,
+        price: true,
+        is_active: true,
         category: {
           category_id: true,
           name: true,
@@ -116,8 +137,8 @@ export class ProductsService {
   }
 
   // admin endpoints
-  // POST /products — Create a new product
 
+  // POST /products — Create a new product
   async create(dto: CreateProductDto): Promise<ProductEntity> {
     const category = await this.categoryService.findOne(dto.category_id);
 
@@ -130,19 +151,111 @@ export class ProductsService {
   }
 
   // PATCH /products/:id — Update product details
+  async update(id: string, dto: UpdateProductDto) {
+    const product = await this.findOne(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const category = await this.categoryService.findOne(dto.category_id!);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const updatedProduct = {
+      ...product,
+      category,
+      name: dto.name,
+      image_url: dto.image_url,
+      description: dto.description,
+    };
+
+    return await this.productRepository.save(updatedProduct);
+  }
+  // DELETE /products/:id — Soft delete product
+  async delete(id: string) {
+    const product = await this.findOne(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return await this.productRepository.softRemove(product);
+  }
+
+  // PATCH /products/:id/activate — Activate or deactivate a product
+  async toggleActivation(id: string) {
+    const product = await this.findOne(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    await this.productRepository.update(id, {
+      is_active: !product.is_active,
+    });
+
+    return {
+      data: await this.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Product updated successfully',
+    };
+  }
+
+  // PATCH /products/:id/stock — Update stock quantity
+  async updateStock(id: string, quantity: number) {
+    const product = await this.findOne(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    await this.productRepository.update(id, {
+      stock_quantity: quantity,
+    });
+
+    return {
+      data: await this.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Product updated successfully',
+    };
+  }
+
+  // PATCH /products/:id/price — Update product price
+  async updatePrice(id: string, price: number) {
+    const product = await this.findOne(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    await this.productRepository.update(id, {
+      price: Number(price),
+    });
+
+    return {
+      data: await this.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Product updated successfully',
+    };
+  }
+
+  // GET /admin/products — Get all products (including inactive/deleted)
+  async getAll() {
+    return await this.productRepository.find({
+      relations: ['category'],
+      select: {
+        name: true,
+        product_id: true,
+        category: {
+          category_id: true,
+          name: true,
+        },
+      },
+    });
+  }
 }
 
 // public
 // GET /products/featured — Get featured products (if applicable)
 
 // admin
-// DELETE /products/:id — Soft delete product
-// PATCH /products/:id/activate — Activate or deactivate a product
-// POST /products/:id/images — Upload additional product images
-// DELETE /products/:productId/images/:imageId — Delete specific image from a product
-// PATCH /products/:id/stock — Update stock quantity
-// PATCH /products/:id/price — Update product price
-// GET /admin/products — Get all products (including inactive/deleted)
 
 // BATCH A
 

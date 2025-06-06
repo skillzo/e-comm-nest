@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateProductImageDto } from './create-product-image.dto';
 import {
+  IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -17,7 +18,7 @@ export class UpdateProductImageDto {
   @IsUUID()
   product_id: string;
 
-  @IsUUID()
+  @IsBoolean()
   @IsOptional()
   is_primary?: boolean;
 

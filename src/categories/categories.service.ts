@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
@@ -88,8 +88,12 @@ export class CategoriesService {
 
   async update(id: string, dto: UpdateCategoryDto) {
     await this.categoriesRepository.update(id, { name: dto.name });
-    return this.findOne(id);
-    return;
+
+    return {
+      data: await this.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Category updated successfully',
+    };
   }
 }
 
