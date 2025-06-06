@@ -10,6 +10,7 @@ import { OrdersModule } from './orders/orders.module';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { PaymentModule } from './payment/payment.module';
 import { ProductImagesModule } from './product-images/product-images.module';
+import { RolesGuard } from './auth/guard/role.guard';
 
 @Module({
   imports: [

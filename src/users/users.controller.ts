@@ -16,15 +16,15 @@ import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AuthRoles } from 'src/utility/decorators/roles.decorator';
 import { Roles, UserStatus } from 'src/utility/enums/user.enum';
+import { RolesGuard } from 'src/auth/guard/role.guard';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // get all users
-  @UseGuards(JwtAuthGuard)
-  // @AuthRoles(Roles.ADMIN)
+  // @AuthRoles(Roles.USER)
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {
@@ -35,7 +35,7 @@ export class UsersController {
   }
 
   //  get user by id
-  @AuthRoles(Roles.ADMIN)
+  // @AuthRoles(Roles.USER)
   @Get('getById/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -56,7 +56,7 @@ export class UsersController {
   }
 
   // soft delete user
-  @AuthRoles(Roles.ADMIN)
+  // @AuthRoles(Roles.ADMIN)
   @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.usersService.softDelete(id);
@@ -86,7 +86,7 @@ export class UsersController {
     return this.usersService.toggleStatus(id, status);
   }
 
-  @AuthRoles(Roles.ADMIN)
+  // @AuthRoles(Roles.ADMIN)
   @Patch('makeAdmin/:id')
   makeAdmin(@Param('id') id: string) {
     return this.usersService.makeAdmin(id);
