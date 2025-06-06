@@ -16,9 +16,12 @@ import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AddressType } from 'src/utility/enums/address.enum';
+import { AuthRoles } from 'src/utility/decorators/roles.decorator';
+import { Roles } from 'src/utility/enums/user.enum';
+import { RolesGuard } from 'src/auth/guard/role.guard';
 
 @Controller('address')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
@@ -27,14 +30,10 @@ export class AddressController {
     @Body() createAddressDto: CreateAddressDto,
     @CurrentUser() currentUser: UserEntity,
   ) {
-    const payload = {
-      ...createAddressDto,
-      user: currentUser,
-    };
-    return this.addressService.create(payload);
+    return this.addressService.create(createAddressDto, currentUser);
   }
 
-  // get all address (admin)
+  @AuthRoles(Roles.ADMIN)
   @Get('getAll')
   findAll(
     @Query('page') page: number = 1,
@@ -50,32 +49,50 @@ export class AddressController {
   }
 
   // get logged in user address
-  @Get('getByUser')
-  getByUser(@CurrentUser() currentUser: UserEntity) {
-    return this.addressService.findByUser(currentUser);
+  @Get('getByUser/:id')
+  getByUser(@Param('id') id: string) {
+    return this.addressService.findByUser(id);
+  }
+
+  @Get('getmyaddress')
+  getMyAddress(@CurrentUser() currentUser: UserEntity) {
+    return this.addressService.findByLoggedInUser(currentUser);
   }
 
   //update address
   @Patch('update/:id')
-  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
-    return this.addressService.update(id, updateAddressDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateAddressDto: UpdateAddressDto,
+    @CurrentUser() currentUser: UserEntity,
+  ) {
+    return this.addressService.update(id, updateAddressDto, currentUser);
   }
 
   // set as default (shipping)
   @Patch('setAsDefault/:id')
-  setAsDefault(@Param('id') id: string) {
-    return this.addressService.setAsDefault(id);
+  setAsDefault(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserEntity,
+  ) {
+    return this.addressService.setAsDefault(id, currentUser);
   }
 
   // set as billing
-  @Patch('setAsDefault/:id')
-  setAsBilling(@Param('id') id: string) {
-    return this.addressService.setAsBilling(id);
+  @Patch('setAsBilling/:id')
+  setAsBilling(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserEntity,
+  ) {
+    return this.addressService.setAsBilling(id, currentUser);
   }
 
   // delete
   @Delete('delete/:id')
-  remove(@Param('id') id: string) {
-    return this.addressService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: UserEntity,
+  ) {
+    await this.addressService.remove(id, currentUser);
   }
 }

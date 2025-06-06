@@ -13,3 +13,9 @@ export interface IAPIResponse<T> {
     totalPages: number;
   };
 }
+
+export interface ICurrentUser {
+  user_id: string;
+  email: string;
+  role: string;
+}

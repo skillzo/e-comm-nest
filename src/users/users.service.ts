@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { Roles, UserStatus } from 'src/utility/enums/user.enum';
+import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 
 @Injectable()
 export class UsersService {
@@ -50,12 +52,30 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    try {
-      return await this.usersRepository.update(id, updateUserDto);
-    } catch (err) {
-      throw new BadRequestException();
+  async getCurrentUser(user: UserEntity) {
+    const userObj = await this.findById(user.user_id);
+    if (!userObj) {
+      throw new NotFoundException();
     }
+    return {
+      data: userObj,
+      statusCode: HttpStatus.OK,
+      message: 'User found successfully',
+    };
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const updatedUser = {
+      ...user,
+      ...updateUserDto,
+    };
+
+    return await this.usersRepository.update(id, updatedUser);
   }
 
   async softDelete(id: string) {
@@ -98,9 +118,8 @@ export class UsersService {
       throw new BadRequestException('user is already admin');
     }
 
-    console.log('user', user.role);
     const newRole = [...user.role, Roles.ADMIN];
-    // await this.usersRepository.update(id, { role: newRole });
+    await this.usersRepository.update(id, { role: newRole });
 
     return {
       role: newRole,

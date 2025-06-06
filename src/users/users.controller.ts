@@ -24,7 +24,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // get all users
-  // @AuthRoles(Roles.USER)
+  @AuthRoles(Roles.ADMIN)
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {
@@ -35,7 +35,6 @@ export class UsersController {
   }
 
   //  get user by id
-  // @AuthRoles(Roles.USER)
   @Get('getById/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -56,7 +55,6 @@ export class UsersController {
   }
 
   // soft delete user
-  // @AuthRoles(Roles.ADMIN)
   @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.usersService.softDelete(id);
@@ -65,13 +63,7 @@ export class UsersController {
   // get user profile
   @Get('me')
   getProfile(@CurrentUser() currentUser: UserEntity) {
-    return currentUser;
-  }
-
-  // get users addresses
-  @Get('addresses')
-  async getAddresses(@CurrentUser() currentUser: UserEntity) {
-    return currentUser.addresses;
+    return this.usersService.getCurrentUser(currentUser);
   }
 
   // update user password
