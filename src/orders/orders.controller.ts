@@ -31,6 +31,10 @@ export class OrdersController {
   }
 
   // Get All Orders (admin)	GET	/orders
+  @Get('getAll')
+  findAll() {
+    return this.ordersService.findAll();
+  }
 }
 
 // Get My Orders	GET	/orders/my-orders

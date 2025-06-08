@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -18,6 +19,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { createHmac } from 'crypto';
 import { WebhookLogEntity } from './entities/webhookLog.entity';
+import { buildPaginatedResponse } from 'src/common/pagination.response';
 
 @Injectable()
 export class PaymentService {
@@ -66,29 +68,35 @@ export class PaymentService {
     const paystackUrl = `https://api.paystack.co/transaction/initialize`;
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-    const res = await this.httpService.axiosRef.post(
-      paystackUrl,
-      {
-        email: payment_user?.email,
-        amount: Math.round(order.total_amount * 100),
-        reference: paymentRef,
-        callback_url: `${process.env.FRONTEND_URL}`,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${secretKey}`,
-          'Content-Type': 'application/json',
+    try {
+      const res = await this.httpService.axiosRef.post(
+        paystackUrl,
+        {
+          email: payment_user?.email,
+          amount: Math.round(order.total_amount * 100),
+          reference: paymentRef,
+          currency: 'NGN',
+          callback_url: `${process.env.FRONTEND_URL}`,
         },
-      },
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${secretKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
 
-    console.log('paystak link', res.data.data);
+      if (!res.data.data.authorization_url)
+        throw new BadRequestException('Payment failed');
 
-    if (res?.data)
-      return {
-        payment_reference: paymentRef,
-        payment_link: res.data.data.authorization_url,
-      };
+      if (res?.data)
+        return {
+          payment_reference: paymentRef,
+          payment_link: res.data.data.authorization_url,
+        };
+    } catch (error) {
+      throw new BadRequestException(error.response.data);
+    }
   }
 
   async findPaymentByRef(ref: string): Promise<PaymentEntity> {
@@ -99,6 +107,25 @@ export class PaymentService {
     if (!payemnt) throw new NotFoundException('Payment not found');
 
     return payemnt;
+  }
+
+  async findAll(page: number = 1, limit: number = 10) {
+    const [data, totalCount] = await this.paymentRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['order', 'user'],
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    return buildPaginatedResponse(
+      data,
+      totalCount,
+      page,
+      limit,
+      'Payment fetched successfully',
+    );
   }
 
   async markPaymentSuccess(
@@ -125,7 +152,6 @@ export class PaymentService {
       throw new BadRequestException('Invalid signature');
 
     const event: any = req.body;
-    console.log('paystach webhook body', event);
 
     if (event.event === 'charge.success') {
       const reference = event.data.reference;
@@ -135,7 +161,7 @@ export class PaymentService {
       const payment = await this.findPaymentByRef(reference);
       if (!payment) throw new BadRequestException('Payment history not found');
 
-      if (payment.status !== PaymentStatus.SUCCESS)
+      if (payment.status === PaymentStatus.SUCCESS)
         throw new BadRequestException(
           `Payment with ${reference} already marked as success`,
         );
@@ -151,6 +177,11 @@ export class PaymentService {
         provider: 'paystack',
         payload: req.body,
       });
+
+      return {
+        statusCode: HttpStatus.ACCEPTED,
+        message: 'Payment failed',
+      };
     }
 
     if (event.event === 'charge.failed') {
@@ -170,16 +201,11 @@ export class PaymentService {
         provider: 'paystack',
         payload: req.body,
       });
+
+      return {
+        statusCode: HttpStatus.ACCEPTED,
+        message: 'Payment failed',
+      };
     }
   }
 }
-
-// Client → /orders/create → gets order_id
-// Client → /payments/initiate → gets Paystack payment link → opens Paystack checkout
-// Paystack → calls /payments/webhook → your backend verifies → updates PaymentEntity + OrderEntity
-// Client → polls /orders/:id/status → order becomes PAID
-
-// ✅ You should store webhook logs → useful for replays
-// ✅ You should ensure idempotency → prevent duplicate updates
-// ✅ You can add payment retry flow → if webhook is delayed
-// ✅ You can add email receipt → after marking order as PAID

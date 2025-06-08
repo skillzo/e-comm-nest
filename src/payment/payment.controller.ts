@@ -7,14 +7,20 @@ import {
   Param,
   Delete,
   Req,
+  UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guard/role.guard';
+import { Public } from 'src/utility/decorators/public.decorator';
 
-@Controller('payment')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('payments')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
@@ -27,9 +33,19 @@ export class PaymentController {
     return this.paymentService.initiatePayment(body, currentUser);
   }
 
-  @Get('webhook')
-  paystackWebhook(@Req() req: Request) {
-    return this.paymentService.paystackWebhook(req);
+  @Get('history')
+  findAll() {
+    return this.paymentService.findAll();
+  }
+
+  @Post('webhook')
+  @Public()
+  async paystackWebhook(@Req() req: Request) {
+    await this.paymentService.paystackWebhook(req);
+
+    return {
+      message: HttpStatus.ACCEPTED,
+    };
   }
 }
 
