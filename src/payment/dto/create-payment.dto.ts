@@ -1,1 +1,6 @@
-export class CreatePaymentDto {}
+import { IsString, IsUUID } from 'class-validator';
+
+export class CreatePaymentDto {
+  @IsUUID()
+  order_id: string;
+}

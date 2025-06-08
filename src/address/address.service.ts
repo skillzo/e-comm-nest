@@ -40,6 +40,14 @@ export class AddressService {
     };
   }
 
+  async findById(id: string) {
+    const address = await this.addressRepository.findOneBy({ address_id: id });
+    if (!address) {
+      throw new NotFoundException('Address not found');
+    }
+    return address;
+  }
+
   async findAll(page: number = 1, limit: number = 10) {
     const [data, totalCount] = await this.addressRepository.findAndCount({
       skip: (page - 1) * limit,

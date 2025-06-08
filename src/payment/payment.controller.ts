@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+} from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { CurrentUser } from 'src/utility/decorators/CurrentUser.decorator';
+import { UserEntity } from 'src/users/entities/user.entity';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentService.create(createPaymentDto);
+  // Initialize Payment	POST	/payment/initiate
+  @Post('initiate')
+  create(
+    @Body() body: CreatePaymentDto,
+    @CurrentUser() currentUser: UserEntity,
+  ) {
+    return this.paymentService.initiatePayment(body, currentUser);
   }
 
-  @Get()
-  findAll() {
-    return this.paymentService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentService.update(+id, updatePaymentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentService.remove(+id);
+  @Get('webhook')
+  paystackWebhook(@Req() req: Request) {
+    return this.paymentService.paystackWebhook(req);
   }
 }
+
+// Verify Payment	POST	/payment/verify
+// Get My Payment History	GET	/payment/history
+// Get All Payment (admin)	GET	/payment
+// Get One Payment	GET	/payment/:id
+
+// Refund Payment (admin)	POST	/payment/:id/refund

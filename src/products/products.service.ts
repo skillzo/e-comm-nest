@@ -250,6 +250,11 @@ export class ProductsService {
       },
     });
   }
+
+  //  helper functions
+  async findBy(where: FindOptionsWhere<ProductEntity>) {
+    return await this.productRepository.findBy(where);
+  }
 }
 
 // public

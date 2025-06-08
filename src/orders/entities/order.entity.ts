@@ -18,9 +18,9 @@ export class OrderEntity {
 
   @ManyToOne(() => UserEntity, (u) => u.orders)
   @JoinColumn({ name: 'user_id' })
-  user_id: UserEntity;
+  user: UserEntity;
 
-  @OneToMany(() => OrderItemEntity, (i) => i.order_id, {
+  @OneToMany(() => OrderItemEntity, (i) => i.order, {
     cascade: ['insert', 'update'],
   })
   items: OrderItemEntity[];

@@ -1,4 +1,5 @@
 import { OrderEntity } from 'src/orders/entities/order.entity';
+import { ProductEntity } from 'src/products/entities/product.entity';
 import {
   Column,
   Entity,
@@ -12,12 +13,23 @@ export class OrderItemEntity {
   @PrimaryGeneratedColumn('uuid')
   order_item_id: string;
 
-  @Column()
-  product_id: string;
+  @ManyToOne(() => ProductEntity)
+  @JoinColumn({ name: 'product_id' })
+  product: ProductEntity;
 
   @ManyToOne(() => OrderEntity, (o) => o.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
-  order_id: string;
+  order: OrderEntity;
+
+  @Column({ type: 'jsonb', nullable: true })
+  product_snapshot: {
+    name: string;
+    image_url: string;
+    price: number;
+  };
+
+  @Column()
+  image_url: string;
 
   @Column({ type: 'int' })
   quantity: number;
