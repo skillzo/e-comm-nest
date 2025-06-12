@@ -21,6 +21,7 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guard/role.guard';
 import { Roles } from 'src/utility/enums/user.enum';
 import { Public } from 'src/utility/decorators/public.decorator';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,6 +36,7 @@ export class ProductsController {
 
   @Public()
   @Get('getAll')
+  @Throttle({ default: { ttl: 1 * 1000, limit: 2 } })
   findAll() {
     return this.productsService.findAll();
   }

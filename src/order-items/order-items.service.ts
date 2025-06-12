@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { OrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderItemEntity } from './entities/order-item.entity';
@@ -11,8 +10,4 @@ export class OrderItemsService {
     @InjectRepository(OrderItemEntity)
     private readonly addressRepository: Repository<OrderItemEntity>,
   ) {}
-
-  async create(createOrderItemDto: OrderItemDto) {
-    const orderItem = new OrderItemEntity();
-  }
 }
