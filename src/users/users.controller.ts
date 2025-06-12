@@ -17,7 +17,14 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { AuthRoles } from 'src/utility/decorators/roles.decorator';
 import { Roles, UserStatus } from 'src/utility/enums/user.enum';
 import { RolesGuard } from 'src/auth/guard/role.guard';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
@@ -25,6 +32,8 @@ export class UsersController {
 
   // get all users
   @AuthRoles(Roles.ADMIN)
+  @ApiOperation({ summary: 'Get All Users' })
+  @ApiResponse({ status: 201, description: 'Users fetched succesfully ' })
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
     try {

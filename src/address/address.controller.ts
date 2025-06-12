@@ -19,7 +19,9 @@ import { AddressType } from 'src/utility/enums/address.enum';
 import { AuthRoles } from 'src/utility/decorators/roles.decorator';
 import { Roles } from 'src/utility/enums/user.enum';
 import { RolesGuard } from 'src/auth/guard/role.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('address')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AddressController {

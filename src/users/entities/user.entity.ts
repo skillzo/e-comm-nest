@@ -1,6 +1,6 @@
 import { AddressEntity } from 'src/address/entities/address.entity';
 import { OrderEntity } from 'src/orders/entities/order.entity';
-import { Roles, UserStatus } from 'src/utility/enums/user.enum';
+import { Provider, Roles, UserStatus } from 'src/utility/enums/user.enum';
 import {
   BeforeInsert,
   Column,
@@ -24,7 +24,7 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   password: string;
 
   @Column({ type: 'enum', enum: Roles, array: true, default: [Roles.USER] })
@@ -32,6 +32,12 @@ export class UserEntity {
 
   @Column({ default: true })
   is_active: boolean;
+
+  @Column({ type: 'enum', enum: Provider, default: Provider.LOCAL })
+  provider: Provider;
+
+  @Column({ nullable: true })
+  provider_id: string;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;

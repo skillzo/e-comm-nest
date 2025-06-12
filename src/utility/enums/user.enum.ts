@@ -9,3 +9,11 @@ export enum UserStatus {
   PENDING = 'pending',
   SUSPENDED = 'suspended',
 }
+
+export enum Provider {
+  GOOGLE = 'google',
+  LOCAL = 'local',
+  FACEBOOK = 'facebook',
+  TWITTER = 'twitter',
+  LINKEDIN = 'linkedin',
+}
