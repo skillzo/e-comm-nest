@@ -11,10 +11,21 @@ import { OrderItemsModule } from './order-items/order-items.module';
 import { PaymentModule } from './payment/payment.module';
 import { ProductImagesModule } from './product-images/product-images.module';
 import { RolesGuard } from './auth/guard/role.guard';
+import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(dataSourceOptions),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: seconds(1),
+          limit: 1,
+        },
+      ],
+      errorMessage: 'Too Many Requests',
+    }),
     UsersModule,
     AuthModule,
     AddressModule,
@@ -26,6 +37,11 @@ import { RolesGuard } from './auth/guard/role.guard';
     ProductImagesModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

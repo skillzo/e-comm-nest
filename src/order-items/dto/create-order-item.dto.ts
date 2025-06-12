@@ -7,11 +7,11 @@ export class CreateOrderItemDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items: OrderItemDto[];
+  @Type(() => OrderItemDto2)
+  items: OrderItemDto2[];
 }
 
-export class OrderItemDto {
+export class OrderItemDto2 {
   @IsUUID()
   product_id: string;
 

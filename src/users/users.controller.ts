@@ -23,6 +23,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,7 +33,6 @@ export class UsersController {
 
   // get all users
   @AuthRoles(Roles.ADMIN)
-  @ApiOperation({ summary: 'Get All Users' })
   @ApiResponse({ status: 201, description: 'Users fetched succesfully ' })
   @Get('getAll')
   async findAll(): Promise<UserEntity[]> {
