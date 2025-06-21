@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { dataSourceOptions } from 'db/dataSource';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
@@ -13,6 +18,8 @@ import { ProductImagesModule } from './product-images/product-images.module';
 import { RolesGuard } from './auth/guard/role.guard';
 import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { BullModule } from '@nestjs/bullmq';
+import middleware1, { MiddleWare2 } from './middleware/middleware1';
 
 @Module({
   imports: [
@@ -20,10 +27,19 @@ import { APP_GUARD } from '@nestjs/core';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: seconds(1),
-          limit: 1,
+          name: 'default',
+          ttl: seconds(2),
+          limit: 5,
+          blockDuration: seconds(3),
+        },
+        {
+          name: 'long',
+          ttl: seconds(10),
+          limit: 20,
+          blockDuration: seconds(10),
         },
       ],
+
       errorMessage: 'Too Many Requests',
     }),
     UsersModule,
@@ -44,4 +60,10 @@ import { APP_GUARD } from '@nestjs/core';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(middleware1, MiddleWare2)
+      .forRoutes({ method: RequestMethod.GET, path: 'users/getAll' });
+  }
+}

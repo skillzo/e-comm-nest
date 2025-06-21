@@ -9,6 +9,7 @@ import * as morgan from 'morgan';
 import helmet from 'helmet';
 import { winstonLoggerConfig } from './utility/logger/winston.logger';
 import { WinstonModule } from 'nest-winston';
+import middleware1 from './middleware/middleware1';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -43,6 +44,8 @@ async function bootstrap() {
   );
   app.use(helmet());
   app.setGlobalPrefix('api/v1');
+
+  // app.use(middleware1);
 
   app.useGlobalFilters(new AllExceptionsFilter());
   app.use(

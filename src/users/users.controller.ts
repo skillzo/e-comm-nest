@@ -25,11 +25,18 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { text } from 'stream/consumers';
+
 @ApiTags('Users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @InjectQueue('email') private readonly emailQueue: Queue,
+  ) {}
 
   // get all users
   @AuthRoles(Roles.ADMIN)
@@ -91,5 +98,15 @@ export class UsersController {
   @Patch('makeAdmin/:id')
   makeAdmin(@Param('id') id: string) {
     return this.usersService.makeAdmin(id);
+  }
+
+  @Post('mail')
+  async sendSignupMail() {
+    await this.emailQueue.add('user-signup-mail', {
+      to: 'emmanuel.chukwu@sterling.ng',
+      name: 'Skillzo',
+      subject: 'Welcome to Skillzo Fabrics',
+      text: 'Hello From Text body',
+    });
   }
 }
